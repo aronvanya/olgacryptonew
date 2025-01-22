@@ -1,13 +1,14 @@
 from telethon import TelegramClient, events
+import os
 
 # Настройки API
-api_id = 21078867  # Ваш API ID
-api_hash = "95e80b6bea78c5b0c5442702c8cc17de"  # Ваш API Hash
+api_id = int(os.getenv("API_ID"))  # Получение API ID из переменной окружения
+api_hash = os.getenv("API_HASH")  # Получение API Hash из переменной окружения
 session_name = "session_user"  # Имя файла сессии
 
 # Данные каналов
-source_channel_id = -1002361161091  # ID канала-источника
-target_channel_id = -4743699792  # ID целевой группы
+source_channel_id = int(os.getenv("SOURCE_CHANNEL_ID"))  # ID канала-источника
+target_channel_id = int(os.getenv("TARGET_CHANNEL_ID"))  # ID целевой группы
 
 # ID разделов, которые нужно пересылать
 allowed_topics = [3, 5, 6, 976, 1986, 736]  # Указанные ID разделов
