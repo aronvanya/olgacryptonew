@@ -1,2 +1,2 @@
+web: echo "Nothing to serve"
 worker: python main.py
-web: echo "Nothing to serve
