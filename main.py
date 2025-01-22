@@ -10,7 +10,7 @@ session_name = "session_user"  # Имя файла сессии
 string_session = "1ApWapzMBu480WTeHnPyr_MsiPbeabG6UVEHJr67wOp6PYv1em6paWIKpbVNO4QY-eGnI3T_IplUyK7QzZs31nhLy-neLeaQeSy39kBUWKBCSECjN78KjPJz7g9d9R1YMELLCkx4_cpPC41HQQJPIa2jUQTZV0LlRNN3EyOVh3G_ouvW_AUhW1kd-dw49xzV4Opz9GdvAwlFgVYkBrSS6wYDW1T4XlmJdGDw2G-Vwfw34_-2T1xx0CXybl1pnrmVXmfJxepwegQXZ1NLjBYF75tS7ioa1oB-YR7RWyiwEcPMuGdM0lBJEIjiT4ncX_WBzeq4WkWxuAM0VlduuQ9YcoGW3nT4ikDw="
 
 # Инициализация клиента с использованием строковой сессии
-client = TelegramClient(session_name, api_id, api_hash).start(session=string_session)
+client = TelegramClient(StringSession(string_session), api_id, api_hash)
 
 # Данные каналов
 source_channel_id = int(os.getenv("SOURCE_CHANNEL_ID"))  # ID канала-источника
@@ -45,4 +45,5 @@ async def handler(event):
 
 # Запуск клиента
 print("Бот запущен. Ожидаем новые сообщения...")
+client.start()
 client.run_until_disconnected()
