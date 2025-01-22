@@ -13,8 +13,11 @@ target_channel_id = int(os.getenv("TARGET_CHANNEL_ID"))  # ID целевой г�
 # ID разделов, которые нужно пересылать
 allowed_topics = [3, 5, 6, 976, 1986, 736]  # Указанные ID разделов
 
-# Инициализация клиента
-client = TelegramClient(session_name, api_id, api_hash)
+# Получаем строковую сессию из переменных окружения
+string_session = os.getenv("STRING_SESSION")
+
+# Инициализация клиента с использованием строковой сессии
+client = TelegramClient(session_name, api_id, api_hash).start(bot_token=string_session)
 
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
@@ -42,5 +45,4 @@ async def handler(event):
 
 # Запуск клиента
 print("Бот запущен. Ожидаем новые сообщения...")
-client.start()
 client.run_until_disconnected()
