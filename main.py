@@ -1,4 +1,5 @@
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession  # Импортируем StringSession
 import os
 
 # Настройки API
