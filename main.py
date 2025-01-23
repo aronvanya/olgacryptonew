@@ -5,6 +5,7 @@ from telethon.sessions import StringSession
 import requests
 import asyncio
 import threading
+import time
 
 # Настройки API
 api_id = 21078867
@@ -12,8 +13,8 @@ api_hash = "95e80b6bea78c5b0c5442702c8cc17de"
 string_session = "1ApWapzMBu480WTeHnPyr_MsiPbeabG6UVEHJr67wOp6PYv1em6paWIKpbVNO4QY-eGnI3T_IplUyK7QzZs31nhLy-neLeaQeSy39kBUWKBCSECjN78KjPJz7g9d9R1YMELLCkx4_cpPC41HQQJPIa2jUQTZV0LlRNN3EyOVh3G_ouvW_AUhW1kd-dw49xzV4Opz9GdvAwlFgVYkBrSS6wYDW1T4XlmJdGDw2G-Vwfw34_-2T1xx0CXybl1pnrmVXmfJxepwegQXZ1NLjBYF75tS7ioa1oB-YR7RWyiwEcPMuGdM0lBJEIjiT4ncX_WBzeq4WkWxuAM0VlduuQ9YcoGW3nT4ikDw="
 
 # Данные каналов
-source_channel_id = -1002361161091  # ID канала-источника
-target_channel_id = -1002324576765  # ID целевой группы
+source_channel_id = -1002361161091
+target_channel_id = -1002324576765
 
 # Соответствие разделов
 section_mapping = {
@@ -62,17 +63,18 @@ def ping_self():
                 print("Самопинг успешен!")
         except Exception as e:
             print(f"Ошибка пинга: {e}")
-        finally:
-            asyncio.sleep(60)
+        time.sleep(60)
 
-# Запуск Flask в отдельном потоке
+# Запуск Flask в главном потоке
 def run_flask():
     app.run(host="0.0.0.0", port=8080)
 
-# Запуск Telegram клиента в отдельном потоке
+# Запуск Telegram клиента в asyncio
 def run_telegram_client():
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
     with client:
-        client.loop.run_forever()
+        loop.run_until_complete(client.run_until_disconnected())
 
 # Основной поток для Flask
 flask_thread = threading.Thread(target=run_flask)
