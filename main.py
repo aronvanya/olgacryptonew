@@ -3,7 +3,6 @@ from flask import Flask
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 import threading
-import time
 import requests
 
 # Настройки API
@@ -15,8 +14,13 @@ string_session = "1ApWapzMBu480WTeHnPyr_MsiPbeabG6UVEHJr67wOp6PYv1em6paWIKpbVNO4
 source_channel_id = -1002361161091  # ID канала-источника
 target_channel_id = -1002324576765  # ID целевой группы
 
-# ID разделов, которые нужно пересылать
-allowed_topics = [3, 5, 1986, 736]
+# ID разделов и их соответствия
+section_mapping = {
+    3: 33,
+    5: 29,
+    976: 32,
+    1986: 35
+}
 
 # Инициализация Telegram клиента
 client = TelegramClient(StringSession(string_session), api_id, api_hash)
@@ -26,20 +30,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Bot is running locally!"
-
-# Функция для локального пинга Flask
-def local_ping():
-    while True:
-        try:
-            response = requests.get("http://127.0.0.1:8080/")  # Локальный запрос
-            if response.status_code == 200:
-                print("Local ping successful!")
-            else:
-                print(f"Local ping failed with status code {response.status_code}.")
-        except Exception as e:
-            print(f"Error during local ping: {e}")
-        time.sleep(60)  # Пинг раз в минуту
+    return "Bot is running!"
 
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
@@ -49,12 +40,16 @@ async def handler(event):
 
     if reply_to:
         topic_id = reply_to.reply_to_top_id if reply_to.reply_to_top_id else reply_to.reply_to_msg_id
-        if topic_id in allowed_topics:
+        if topic_id in section_mapping:
+            target_topic_id = section_mapping[topic_id]
             try:
-                await client.send_message(target_channel_id, message.text)
-                print(f"Сообщение из раздела {topic_id} отправлено: {message.text}")
+                await client.send_message(
+                    target_channel_id, message.text,
+                    reply_to=target_topic_id
+                )
+                print(f"Сообщение из раздела {topic_id} отправлено в раздел {target_topic_id}: {message.text}")
             except Exception as e:
-                print(f"Ошибка при отправке сообщения: {e}")
+                print(f"Ошибка при отправке сообщения в раздел {target_topic_id}: {e}")
         else:
             print(f"Пропущено: сообщение из раздела {topic_id}")
     else:
@@ -62,20 +57,30 @@ async def handler(event):
 
 # Запуск Flask в отдельном потоке
 def run_flask():
-    port = 8080  # Локальный порт для Flask
-    app.run(host="127.0.0.1", port=port)
+    port = int(os.environ.get("PORT", 8080))  # Используем порт, предоставленный Heroku
+    app.run(host="0.0.0.0", port=port)
 
-# Запуск Telegram клиента в отдельном потоке
-def run_telegram_client():
-    client.start()
-    client.run_until_disconnected()
+# Запуск пинга самого себя для поддержания активности
+def ping_self():
+    while True:
+        try:
+            requests.get("http://127.0.0.1:8080")
+            print("Local ping successful!")
+        except Exception as e:
+            print(f"Ошибка пинга: {e}")
+        threading.Event().wait(60)  # Пинг раз в минуту
 
-# Запуск потоков
 flask_thread = threading.Thread(target=run_flask)
 flask_thread.start()
 
-ping_thread = threading.Thread(target=local_ping)
+ping_thread = threading.Thread(target=ping_self)
 ping_thread.start()
 
-print("Бот запущен. Ожидаем новые сообщения...")
-run_telegram_client()
+# Запуск Telegram клиента
+def run_telegram_client():
+    print("Бот запущен. Ожидаем новые сообщения...")
+    client.start()
+    client.run_until_disconnected()
+
+telegram_thread = threading.Thread(target=run_telegram_client)
+telegram_thread.start()
