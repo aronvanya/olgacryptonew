@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
-import threading
+import asyncio
 
 # Настройки API
 api_id = 21078867  # Ваш API ID
@@ -45,17 +45,15 @@ async def handler(event):
     else:
         print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
 
-# Функция для запуска Telegram клиента
-def run_telegram_client():
+async def main():
     print("Бот запущен. Ожидаем новые сообщения...")
-    client.start()
-    client.run_until_disconnected()
+    await client.start()
 
-# Запуск Telegram клиента в отдельном потоке
-telegram_thread = threading.Thread(target=run_telegram_client, daemon=True)
-telegram_thread.start()
+    # Запуск Flask в asyncio
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, lambda: app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080))))
 
-# Запуск Flask
+    await client.run_until_disconnected()
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Используем порт, предоставленный Heroku
-    app.run(host="0.0.0.0", port=port)
+    asyncio.run(main())
