@@ -2,7 +2,9 @@ import os
 from flask import Flask
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
-import asyncio
+import threading
+import time
+import requests
 
 # Настройки API
 api_id = 21078867  # Ваш API ID
@@ -24,7 +26,20 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Bot is running!"
+    return "Bot is running locally!"
+
+# Функция для локального пинга Flask
+def local_ping():
+    while True:
+        try:
+            response = requests.get("http://127.0.0.1:8080/")  # Локальный запрос
+            if response.status_code == 200:
+                print("Local ping successful!")
+            else:
+                print(f"Local ping failed with status code {response.status_code}.")
+        except Exception as e:
+            print(f"Error during local ping: {e}")
+        time.sleep(60)  # Пинг раз в минуту
 
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
@@ -45,15 +60,22 @@ async def handler(event):
     else:
         print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
 
-async def main():
-    print("Бот запущен. Ожидаем новые сообщения...")
-    await client.start()
+# Запуск Flask в отдельном потоке
+def run_flask():
+    port = 8080  # Локальный порт для Flask
+    app.run(host="127.0.0.1", port=port)
 
-    # Запуск Flask в asyncio
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, lambda: app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080))))
+# Запуск Telegram клиента в отдельном потоке
+def run_telegram_client():
+    client.start()
+    client.run_until_disconnected()
 
-    await client.run_until_disconnected()
+# Запуск потоков
+flask_thread = threading.Thread(target=run_flask)
+flask_thread.start()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+ping_thread = threading.Thread(target=local_ping)
+ping_thread.start()
+
+print("Бот запущен. Ожидаем новые сообщения...")
+run_telegram_client()
