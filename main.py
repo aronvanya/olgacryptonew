@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
@@ -13,9 +14,9 @@ source_channel_id = -1002361161091  # ID канала-источника
 target_channel_id = -4743699792  # ID целевой группы
 
 # ID разделов, которые нужно пересылать
-allowed_topics = [3, 5, 6, 976, 1986, 736]  # Указанные ID разделов
+allowed_topics = [3, 5, 6, 976, 1986, 736]
 
-# Инициализация клиента
+# Инициализация Telegram клиента
 client = TelegramClient(StringSession(string_session), api_id, api_hash)
 
 # Настройка Flask
@@ -28,16 +29,11 @@ def home():
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
 async def handler(event):
-    # Получаем информацию о сообщении
     message = event.message
     reply_to = message.reply_to
 
-    # Проверяем наличие reply_to
     if reply_to:
-        # Используем reply_to_top_id, если доступно
         topic_id = reply_to.reply_to_top_id if reply_to.reply_to_top_id else reply_to.reply_to_msg_id
-
-        # Проверяем, относится ли сообщение к нужным разделам
         if topic_id in allowed_topics:
             try:
                 await client.send_message(target_channel_id, message.text)
@@ -51,7 +47,8 @@ async def handler(event):
 
 # Запуск Flask в отдельном потоке
 def run_flask():
-    app.run(host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))  # Heroku предоставляет PORT в переменных окружения
+    app.run(host="0.0.0.0", port=port)
 
 flask_thread = threading.Thread(target=run_flask)
 flask_thread.start()
