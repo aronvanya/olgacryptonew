@@ -1,50 +1,63 @@
-from telethon import TelegramClient, events
-from telethon.sessions import StringSession  # Импортируем StringSession
 import os
+from flask import Flask
+from telethon import TelegramClient, events
+from telethon.sessions import StringSession
+import logging
+import threading
 
 # Настройки API
 api_id = 21078867  # Ваш API ID
 api_hash = "95e80b6bea78c5b0c5442702c8cc17de"  # Ваш API Hash
 session_name = "session_user"  # Имя файла сессии
 
-# Строковая сессия, вставьте сюда вашу строку сессии
-string_session = "1ApWapzMBu480WTeHnPyr_MsiPbeabG6UVEHJr67wOp6PYv1em6paWIKpbVNO4QY-eGnI3T_IplUyK7QzZs31nhLy-neLeaQeSy39kBUWKBCSECjN78KjPJz7g9d9R1YMELLCkx4_cpPC41HQQJPIa2jUQTZV0LlRNN3EyOVh3G_ouvW_AUhW1kd-dw49xzV4Opz9GdvAwlFgVYkBrSS6wYDW1T4XlmJdGDw2G-Vwfw34_-2T1xx0CXybl1pnrmVXmfJxepwegQXZ1NLjBYF75tS7ioa1oB-YR7RWyiwEcPMuGdM0lBJEIjiT4ncX_WBzeq4WkWxuAM0VlduuQ9YcoGW3nT4ikDw="
+# Строковая сессия
+string_session = "ВАША_СТРОКОВАЯ_СЕССИЯ"
 
 # Инициализация клиента с использованием строковой сессии
 client = TelegramClient(StringSession(string_session), api_id, api_hash)
 
 # Данные каналов
-source_channel_id = int(os.getenv("SOURCE_CHANNEL_ID"))  # ID канала-источника
-target_channel_id = int(os.getenv("TARGET_CHANNEL_ID"))  # ID целевой группы
+source_channel_id = int(os.getenv("SOURCE_CHANNEL_ID"))
+target_channel_id = int(os.getenv("TARGET_CHANNEL_ID"))
 
 # ID разделов, которые нужно пересылать
-allowed_topics = [3, 5, 6, 976, 1986, 736]  # Указанные ID разделов
+allowed_topics = [3, 5, 6, 976, 1986, 736]
+
+# Настройка Flask
+app = Flask(__name__)
+
+@app.route("/")
+def hello():
+    return "Bot is running!"
 
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
 async def handler(event):
-    # Получаем информацию о сообщении
     message = event.message
     reply_to = message.reply_to
 
-    # Проверяем наличие reply_to
     if reply_to:
-        # Используем reply_to_top_id, если доступно
         topic_id = reply_to.reply_to_top_id if reply_to.reply_to_top_id else reply_to.reply_to_msg_id
-
-        # Проверяем, относится ли сообщение к нужным разделам
         if topic_id in allowed_topics:
             try:
                 await client.send_message(target_channel_id, message.text)
-                print(f"Сообщение из раздела {topic_id} отправлено: {message.text}")
+                logging.info(f"Сообщение из раздела {topic_id} отправлено: {message.text}")
             except Exception as e:
-                print(f"Ошибка при отправке сообщения: {e}")
+                logging.error(f"Ошибка при отправке сообщения: {e}")
         else:
-            print(f"Пропущено: сообщение из раздела {topic_id}")
+            logging.info(f"Пропущено: сообщение из раздела {topic_id}")
     else:
-        print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
+        logging.info(f"Пропущено: сообщение без reply_to")
+
+# Функция для запуска Flask в отдельном потоке
+def run_flask():
+    app.run(host="0.0.0.0", port=8080)
+
+# Запуск Flask в отдельном потоке
+flask_thread = threading.Thread(target=run_flask)
+flask_thread.start()
 
 # Запуск клиента
-print("Бот запущен. Ожидаем новые сообщения...")
+logging.info("Бот запущен. Ожидаем новые сообщения...")
 client.start()
 client.run_until_disconnected()
