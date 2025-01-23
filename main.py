@@ -16,7 +16,7 @@ source_channel_id = -1002361161091  # ID канала-источника
 target_channel_id = -1002324576765  # ID целевой группы
 
 # ID разделов, которые нужно пересылать
-allowed_topics = [3, 5, 6, 976, 1986, 736]
+allowed_topics = [3, 5, 1986, 736]
 
 # Инициализация Telegram клиента
 client = TelegramClient(StringSession(string_session), api_id, api_hash)
