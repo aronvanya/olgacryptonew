@@ -47,7 +47,7 @@ async def handler(event):
 
 # Запуск Flask в отдельном потоке
 def run_flask():
-    port = int(os.environ.get("PORT", 8080))  # Heroku предоставляет PORT в переменных окружения
+    port = int(os.environ.get("PORT", 8080))  # Используем порт, предоставленный Heroku
     app.run(host="0.0.0.0", port=port)
 
 flask_thread = threading.Thread(target=run_flask)
