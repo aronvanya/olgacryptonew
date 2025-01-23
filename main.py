@@ -45,15 +45,17 @@ async def handler(event):
     else:
         print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
 
-# Запуск Flask в отдельном потоке
-def run_flask():
+# Функция для запуска Telegram клиента
+def run_telegram_client():
+    print("Бот запущен. Ожидаем новые сообщения...")
+    client.start()
+    client.run_until_disconnected()
+
+# Запуск Telegram клиента в отдельном потоке
+telegram_thread = threading.Thread(target=run_telegram_client, daemon=True)
+telegram_thread.start()
+
+# Запуск Flask
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))  # Используем порт, предоставленный Heroku
     app.run(host="0.0.0.0", port=port)
-
-flask_thread = threading.Thread(target=run_flask)
-flask_thread.start()
-
-# Запуск Telegram клиента
-print("Бот запущен. Ожидаем новые сообщения...")
-client.start()
-client.run_until_disconnected()
