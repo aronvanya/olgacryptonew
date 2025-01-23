@@ -3,6 +3,14 @@ from flask import Flask
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 import threading
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Настройки API
 api_id = 21078867  # Ваш API ID
@@ -11,7 +19,7 @@ string_session = "1ApWapzMBu480WTeHnPyr_MsiPbeabG6UVEHJr67wOp6PYv1em6paWIKpbVNO4
 
 # Данные каналов
 source_channel_id = -1002361161091  # ID канала-источника
-target_channel_id = -1002324576765 # ID целевой группы
+target_channel_id = -1002324576765  # ID целевой группы
 
 # ID разделов, которые нужно пересылать
 allowed_topics = [3, 5, 6, 976, 1986, 736]
@@ -24,7 +32,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Bot is running!"
+    return "Bot is running!", 200
 
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
@@ -37,13 +45,13 @@ async def handler(event):
         if topic_id in allowed_topics:
             try:
                 await client.send_message(target_channel_id, message.text)
-                print(f"Сообщение из раздела {topic_id} отправлено: {message.text}")
+                logger.info(f"Сообщение из раздела {topic_id} отправлено: {message.text}")
             except Exception as e:
-                print(f"Ошибка при отправке сообщения: {e}")
+                logger.error(f"Ошибка при отправке сообщения: {e}")
         else:
-            print(f"Пропущено: сообщение из раздела {topic_id}")
+            logger.warning(f"Пропущено: сообщение из раздела {topic_id}")
     else:
-        print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
+        logger.warning(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
 
 # Запуск Flask в отдельном потоке
 def run_flask():
@@ -54,6 +62,6 @@ flask_thread = threading.Thread(target=run_flask)
 flask_thread.start()
 
 # Запуск Telegram клиента
-print("Бот запущен. Ожидаем новые сообщения...")
+logger.info("Бот запущен. Ожидаем новые сообщения...")
 client.start()
 client.run_until_disconnected()
