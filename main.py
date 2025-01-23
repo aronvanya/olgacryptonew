@@ -11,7 +11,7 @@ string_session = "1ApWapzMBu480WTeHnPyr_MsiPbeabG6UVEHJr67wOp6PYv1em6paWIKpbVNO4
 
 # Данные каналов
 source_channel_id = -1002361161091  # ID канала-источника
-target_channel_id = -4743699792  # ID целевой группы
+target_channel_id = -1002324576765 # ID целевой группы
 
 # ID разделов, которые нужно пересылать
 allowed_topics = [3, 5, 6, 976, 1986, 736]
