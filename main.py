@@ -37,22 +37,23 @@ def home():
 # Обработчик новых сообщений
 @client.on(events.NewMessage(chats=source_channel_id))
 async def handler(event):
-    message = event.message
-    reply_to = message.reply_to
+    try:
+        message = event.message
+        reply_to = message.reply_to
 
-    if reply_to:
-        topic_id = reply_to.reply_to_top_id if reply_to.reply_to_top_id else reply_to.reply_to_msg_id
-        if topic_id in section_mapping:
-            try:
+        print(f"Новое сообщение: {message.text}")
+        if reply_to:
+            topic_id = reply_to.reply_to_top_id if reply_to.reply_to_top_id else reply_to.reply_to_msg_id
+            if topic_id in section_mapping:
                 target_topic = section_mapping[topic_id]
-                await client.send_message(target_channel_id, message.text, reply_to=target_topic)
+                await client.send_message(target_channel_id, message.text)
                 print(f"Сообщение из раздела {topic_id} отправлено в раздел {target_topic}: {message.text}")
-            except Exception as e:
-                print(f"Ошибка при отправке сообщения: {e}")
+            else:
+                print(f"Пропущено: сообщение из раздела {topic_id}")
         else:
-            print(f"Пропущено: сообщение из раздела {topic_id}")
-    else:
-        print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
+            print(f"Пропущено: сообщение без reply_to. Полное сообщение: {message.to_dict()}")
+    except Exception as e:
+        print(f"Ошибка в обработчике сообщений: {e}")
 
 # Функция для самопинга
 def ping_self():
